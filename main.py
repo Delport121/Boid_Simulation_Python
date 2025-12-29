@@ -39,8 +39,9 @@ def main() -> None:
 
 
         for boid in BOIDS:
+            boid.flock_boid(BOIDS)
+            boid.update_boid(delta_time)
             boid.draw_boid(screen)
-            boid.move_boid(delta_time)
 
         py.display.update()
         clock.tick(60)
