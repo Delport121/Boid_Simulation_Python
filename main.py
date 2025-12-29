@@ -16,7 +16,6 @@ def main() -> None:
 
     BOIDS: list[Boid] = []
 
-        # Helper functions
     def add_boid(x: float = None, y: float = None):
         if x is None: x = random.uniform(0, SCREEN_WIDTH)
         if y is None: y = random.uniform(0, SCREEN_HEIGHT)
@@ -25,6 +24,7 @@ def main() -> None:
 
 
         BOIDS.append(new_boid)
+
     for _ in range(30):
         add_boid()
 
@@ -39,7 +39,8 @@ def main() -> None:
 
 
         for boid in BOIDS:
-            boid.draw(screen)
+            boid.draw_boid(screen)
+            boid.move_boid(delta_time)
 
         py.display.update()
         clock.tick(60)
