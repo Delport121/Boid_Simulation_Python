@@ -57,12 +57,14 @@ class Boid:
             desired_velocity /= total
             desired_velocity = (desired_velocity / np.linalg.norm(desired_velocity)) * MAX_SPEED # Scale to max speed
             steering_force = desired_velocity - self.velocity
+            steering_force = steering_force / np.linalg.norm(steering_force) * MAX_SPEED
 
         return steering_force
     
     def cohere_boid(self, boids: list['Boid']) -> None:
         perception_radius = 50
         center_of_mass = np.array([0.0, 0.0])
+        steering_force = np.array([0.0, 0.0])
         total = 0
 
         for boid in boids:
@@ -73,18 +75,45 @@ class Boid:
 
         if total > 0:
             center_of_mass /= total
+            vector_to_center = center_of_mass - self.position
+            vector_to_center_norm = (vector_to_center / np.linalg.norm(vector_to_center)) * MAX_SPEED
+            steering_force = vector_to_center_norm - self.velocity
+            steering_force = steering_force / np.linalg.norm(steering_force) * MAX_SPEED
 
-        steering_force = center_of_mass - self.position
+        return steering_force
+    
+    def separate_boid(self, boids: list['Boid']) -> None:
+        perception_radius = 50
+        combined_vector = np.array([0.0, 0.0])
+        steering_force = np.array([0.0, 0.0])
+        total = 0
+
+        for boid in boids:
+            distance = np.linalg.norm(self.position - boid.position)
+            if boid != self and distance < perception_radius:
+                vector_to_self = self.position - boid.position
+                vector_to_self_proportional = vector_to_self / distance # Closer boids contribute more
+                combined_vector += vector_to_self_proportional
+                total += 1
+
+        if total > 0:
+            combined_vector /= total
+            steering_force = combined_vector / np.linalg.norm(combined_vector) * MAX_SPEED
+
         return steering_force
 
     def flock_boid(self, boids: list['Boid']) -> None:
         self.acceleration = np.array([0.0, 0.0])
 
         allignment_force = self.align_boid(boids)
-        # cohesion_force = self.cohere_boid(boids)
+        cohesion_force = self.cohere_boid(boids)
+        separation_force = self.separate_boid(boids)
 
-        self.acceleration += allignment_force
+        # self.acceleration += allignment_force
         # self.acceleration += cohesion_force
+        self.acceleration += separation_force
+
+        # self.acceleration = self.acceleration / np.linalg.norm(self.acceleration) * MAX_SPEED
 
     def update_boid(self, delta_time: float = 1) -> None:
         # # Change velocity direction
