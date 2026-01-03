@@ -3,13 +3,13 @@ import pygame as py
 import numpy as np
 import random
 
-MAX_SPEED = 40.0
+MAX_SPEED = 80.0
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 RANDOM_ANGLE_CHANGE_RANGE = math.pi / 16
 
 class Boid:
-    def __init__(self, x, y, size, color) -> None:
+    def __init__(self, x, y, size, color: tuple = (255, 0, 0)) -> None:
         self.size = size
         self.color = color
 
@@ -92,7 +92,7 @@ class Boid:
             distance = np.linalg.norm(self.position - boid.position)
             if boid != self and distance < perception_radius:
                 vector_to_self = self.position - boid.position
-                vector_to_self_proportional = vector_to_self / distance # Closer boids contribute more
+                vector_to_self_proportional = vector_to_self / distance**2 # Closer boids contribute more
                 combined_vector += vector_to_self_proportional
                 total += 1
 
@@ -109,8 +109,8 @@ class Boid:
         cohesion_force = self.cohere_boid(boids)
         separation_force = self.separate_boid(boids)
 
-        # self.acceleration += allignment_force
-        # self.acceleration += cohesion_force
+        self.acceleration += allignment_force
+        self.acceleration += cohesion_force
         self.acceleration += separation_force
 
         # self.acceleration = self.acceleration / np.linalg.norm(self.acceleration) * MAX_SPEED
@@ -133,7 +133,21 @@ class Boid:
         self.position += self.velocity * delta_time
         
         # Keep within bounds
+        self.update_colour()
         self.keep_within_bounds(SCREEN_WIDTH, SCREEN_HEIGHT)
+    
+    def update_colour(self) -> None:
+        speed = np.linalg.norm(self.velocity)
+        hue = speed / MAX_SPEED  # Normalize speed to [0, 1] for hue
+
+        H_MIN = 120 / 360
+        H_MAX = 240 / 360
+        h = max(H_MIN, min(H_MAX, hue))
+
+        color = hsv_a_rgb(h, 1.0, 1.0)
+
+        self.color = tuple(int(c * 255) for c in color)
+
     
     def keep_within_bounds(self, width: int, height: int) -> None:
         if self.position[0] < 0:
@@ -146,5 +160,30 @@ class Boid:
         elif self.position[1] > height:
             self.position[1] = 0
 
+def hsv_a_rgb(h, s, v) -> tuple:
+    """
+    :param h: Hue
+    :param s: Saturation
+    :param v: Value
+    :return: (R,G,B)
+    """
+    i = int(h * 6)
+    f = h * 6 - i
+    p = v * (1 - s)
+    q = v * (1 - f * s)
+    t = v * (1 - (1 - f) * s)
+    i = i % 6
+    if i == 0:
+        return v, t, p
+    if i == 1:
+        return q, v, p
+    if i == 2:
+        return p, v, t
+    if i == 3:
+        return p, q, v
+    if i == 4:
+        return t, p, v
+    if i == 5:
+        return v, p, q
 
 
