@@ -10,7 +10,7 @@ SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 
 text_size: int = 10
-text_offSet: int = 80
+text_offSet: int = 110
 slider_sizeX: int = 80
 slider_sizeY: int = 10
 slider_offSetX: int = 100
@@ -19,11 +19,20 @@ BLUE = (0, 0, 255)
 
 screen = py.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
-FORCESlider = Slider(screen,
+Allignment_weight_slider = Slider(screen,
                     SCREEN_WIDTH - slider_offSetX,
                     SCREEN_HEIGHT - slider_offSetY, slider_sizeX, slider_sizeY,
-                    min=0, max=10, step=0.5, initial=1, handleColour=BLUE)
+                    min=0.0, max=2, step=0.01, initial=0.0, handleColour=BLUE)
 
+Cohesion_weight_slider = Slider(screen,
+                    SCREEN_WIDTH - slider_offSetX,
+                    SCREEN_HEIGHT - slider_offSetY - slider_offSetY, slider_sizeX, slider_sizeY,
+                    min=0.0, max=2, step=0.01, initial=0.0, handleColour=BLUE)
+
+Separation_weight_slider = Slider(screen,
+                    SCREEN_WIDTH - slider_offSetX,
+                    SCREEN_HEIGHT - slider_offSetY - 2 * slider_offSetY, slider_sizeX, slider_sizeY,
+                    min=0.0, max=2, step=0.01, initial=0.0, handleColour=BLUE)
 
 def main() -> None:
     py.init()
@@ -55,14 +64,24 @@ def main() -> None:
         delta_time = clock.get_time() / 1000.0
 
         # Render slider label and value
-        force_value = FORCESlider.getValue()
-        label_text = font.render(f"Force: {force_value:.1f}", True, (255, 255, 255))
-        screen.blit(label_text, (SCREEN_WIDTH - slider_offSetX - text_offSet, SCREEN_HEIGHT - slider_offSetY))
+        Alignment_weight = Allignment_weight_slider.getValue()
+        Cohesion_weight = Cohesion_weight_slider.getValue()
+        Separation_weight = Separation_weight_slider.getValue()
         
+        allignment_label_text = font.render(f"Allignment: {Alignment_weight:.1f}", True, (255, 255, 255))
+        cohesion_label_text = font.render(f"Cohesion: {Cohesion_weight:.1f}", True, (255, 255, 255))
+        separation_label_text = font.render(f"Separation: {Separation_weight:.1f}", True, (255, 255, 255))
         
-        FORCESlider.draw()
+        screen.blit(allignment_label_text, (SCREEN_WIDTH - slider_offSetX - text_offSet, SCREEN_HEIGHT - slider_offSetY))
+        screen.blit(cohesion_label_text, (SCREEN_WIDTH - slider_offSetX - text_offSet, SCREEN_HEIGHT - slider_offSetY - slider_offSetY))
+        screen.blit(separation_label_text, (SCREEN_WIDTH - slider_offSetX - text_offSet, SCREEN_HEIGHT - slider_offSetY - 2 * slider_offSetY))
+
+        Allignment_weight_slider.draw()
+        Cohesion_weight_slider.draw()
+        Separation_weight_slider.draw()
 
         for boid in BOIDS:
+            boid.set_weights(seperation=Separation_weight, cohesion=Cohesion_weight, alignment=Alignment_weight)
             boid.flock_boid(BOIDS)
             boid.update_boid(delta_time)
             boid.draw_boid(screen)

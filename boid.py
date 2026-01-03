@@ -23,6 +23,10 @@ class Boid:
         self.cohesion = False
         self.alignment = False
 
+        self.seperation_weight = 1.0
+        self.cohesion_weight = 1.0
+        self.alignment_weight = 1.0
+
     def draw_boid(self, screen) -> None:
         angle = math.atan2(self.velocity[1], self.velocity[0])
         points = [
@@ -109,11 +113,9 @@ class Boid:
         cohesion_force = self.cohere_boid(boids)
         separation_force = self.separate_boid(boids)
 
-        self.acceleration += allignment_force
-        self.acceleration += cohesion_force
-        self.acceleration += separation_force
-
-        # self.acceleration = self.acceleration / np.linalg.norm(self.acceleration) * MAX_SPEED
+        self.acceleration += allignment_force * self.alignment_weight
+        self.acceleration += cohesion_force * self.cohesion_weight
+        self.acceleration += separation_force * self.seperation_weight
 
     def update_boid(self, delta_time: float = 1) -> None:
         # # Change velocity direction
@@ -135,11 +137,17 @@ class Boid:
         # Keep within bounds
         self.update_colour()
         self.keep_within_bounds(SCREEN_WIDTH, SCREEN_HEIGHT)
-    
+
+    def set_weights(self, seperation: float, cohesion: float, alignment: float) -> None:
+        self.seperation_weight = seperation
+        self.cohesion_weight = cohesion
+        self.alignment_weight = alignment
+
     def update_colour(self) -> None:
         speed = np.linalg.norm(self.velocity)
         hue = speed / MAX_SPEED  # Normalize speed to [0, 1] for hue
 
+        # Clamp hue to blue range
         H_MIN = 120 / 360
         H_MAX = 240 / 360
         h = max(H_MIN, min(H_MAX, hue))
@@ -148,7 +156,6 @@ class Boid:
 
         self.color = tuple(int(c * 255) for c in color)
 
-    
     def keep_within_bounds(self, width: int, height: int) -> None:
         if self.position[0] < 0:
             self.position[0] = width
